@@ -1,15 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
+using System.Security.Claims;
 using System.Threading;
+using System.Threading.Tasks;
+using AspNetCore.Identity.DocumentDb.Tools;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.Options;
-using Microsoft.Azure.Documents;
-using System.Security.Claims;
-using System.Net;
-using AspNetCore.Identity.DocumentDb.Tools;
 
 namespace AspNetCore.Identity.DocumentDb.Stores
 {
@@ -29,7 +29,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
             : base(documentClient, options, options.Value.RoleStoreDocumentCollection ?? options.Value.UserStoreDocumentCollection)
         {
             collectionUri = UriFactory.CreateDocumentCollectionUri(
-                this.options.Database, 
+                this.options.Database,
                 this.options.RoleStoreDocumentCollection ?? this.options.UserStoreDocumentCollection);
         }
 
@@ -269,7 +269,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(normalizedRoleName));
             }
 
-            TRole role = documentClient.CreateDocumentQuery<TRole>(collectionUri)
+            TRole role = documentClient.CreateDocumentQuery<TRole>(collectionUri, CreateFeedOptions())
                 .Where(r => r.NormalizedName == normalizedRoleName && r.DocumentType == typeof(TRole).Name)
                 .AsEnumerable()
                 .FirstOrDefault();
@@ -285,6 +285,26 @@ namespace AspNetCore.Identity.DocumentDb.Stores
             disposed = false;
         }
 
-        #endregion
+        #endregion IDisposable Support
+
+        #region Helper methods
+
+        protected FeedOptions CreateFeedOptions(object partitionKey = null)
+        {
+            var options = new FeedOptions();
+
+            if (partitionKey == null)
+            {
+                options.EnableCrossPartitionQuery = true;
+            }
+            else
+            {
+                options.PartitionKey = new PartitionKey(partitionKey);
+            }
+
+            return options;
+        }
+
+        #endregion Helper methods
     }
 }

@@ -1,15 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Threading;
+using System.Net;
 using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
+using AspNetCore.Identity.DocumentDb.Tools;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.Options;
-using Microsoft.Azure.Documents;
-using System.Net;
-using AspNetCore.Identity.DocumentDb.Tools;
 
 namespace AspNetCore.Identity.DocumentDb.Stores
 {
@@ -145,7 +145,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(normalizedUserName));
             }
 
-            TUser foundUser = documentClient.CreateDocumentQuery<TUser>(collectionUri)
+            TUser foundUser = documentClient.CreateDocumentQuery<TUser>(collectionUri, CreateFeedOptions())
                 .Where(u => u.NormalizedUserName == normalizedUserName && u.DocumentType == typeof(TUser).Name)
                 .AsEnumerable()
                 .FirstOrDefault();
@@ -339,7 +339,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(claims));
             }
 
-            IEnumerable<Claim> foundClaims = user.Claims.Where(c => claims.Any(rc => rc.Type == c.Type && rc.Value ==c.Value)).ToList();
+            IEnumerable<Claim> foundClaims = user.Claims.Where(c => claims.Any(rc => rc.Type == c.Type && rc.Value == c.Value)).ToList();
 
             foreach (Claim claimToRemove in foundClaims)
             {
@@ -359,7 +359,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(claim));
             }
 
-            var result = documentClient.CreateDocumentQuery<TUser>(collectionUri)
+            var result = documentClient.CreateDocumentQuery<TUser>(collectionUri, CreateFeedOptions())
                 .SelectMany(u => u.Claims
                     .Where(c => c.Type == claim.Type && c.Value == claim.Value)
                     .Select(c => u)
@@ -446,7 +446,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(loginProvider));
             }
 
-            TUser user = documentClient.CreateDocumentQuery<TUser>(collectionUri)
+            TUser user = documentClient.CreateDocumentQuery<TUser>(collectionUri, CreateFeedOptions())
                 .SelectMany(u => u.Logins
                     .Where(l => l.LoginProvider == loginProvider && l.ProviderKey == providerKey)
                     .Select(l => u)
@@ -551,7 +551,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(normalizedRoleName));
             }
 
-            var result = documentClient.CreateDocumentQuery<TUser>(collectionUri)
+            var result = documentClient.CreateDocumentQuery<TUser>(collectionUri, CreateFeedOptions())
                 .SelectMany(u => u.Roles
                     .Where(r => r.NormalizedName == normalizedRoleName)
                     .Select(r => u)
@@ -784,7 +784,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(normalizedEmail));
             }
 
-            TUser user = documentClient.CreateDocumentQuery<TUser>(collectionUri)
+            TUser user = documentClient.CreateDocumentQuery<TUser>(collectionUri, CreateFeedOptions())
                 .Where(u => u.NormalizedEmail == normalizedEmail && u.DocumentType == typeof(TUser).Name)
                 .AsEnumerable()
                 .FirstOrDefault();
@@ -920,6 +920,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
         }
 
 #if NETSTANDARD2
+
         public Task SetAuthenticatorKeyAsync(TUser user, string key, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -995,9 +996,10 @@ namespace AspNetCore.Identity.DocumentDb.Stores
             var recoveryCodesCount = user.RecoveryCodes?.Count();
             return Task.FromResult(recoveryCodesCount ?? 0);
         }
+
 #endif
 
-#region IDisposable Support
+        #region IDisposable Support
 
         public void Dispose()
         {
@@ -1005,6 +1007,26 @@ namespace AspNetCore.Identity.DocumentDb.Stores
             disposed = false;
         }
 
-#endregion
+        #endregion IDisposable Support
+
+        #region Helper methods
+
+        protected FeedOptions CreateFeedOptions(object partitionKey = null)
+        {
+            var options = new FeedOptions();
+
+            if (partitionKey == null)
+            {
+                options.EnableCrossPartitionQuery = true;
+            }
+            else
+            {
+                options.PartitionKey = new PartitionKey(partitionKey);
+            }
+
+            return options;
+        }
+
+        #endregion Helper methods
     }
 }
