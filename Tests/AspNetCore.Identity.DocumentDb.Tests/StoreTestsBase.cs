@@ -1,11 +1,9 @@
-﻿using AspNetCore.Identity.DocumentDb.Stores;
+﻿using System;
+using AspNetCore.Identity.DocumentDb.Stores;
 using AspNetCore.Identity.DocumentDb.Tests.Fixtures;
 using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace AspNetCore.Identity.DocumentDb.Tests
@@ -20,9 +18,9 @@ namespace AspNetCore.Identity.DocumentDb.Tests
             this.documentDbFixture = documentDbFixture;
         }
 
-        protected void CreateDocument(object document)
+        protected void CreateDocument<TDocument>(TDocument document) where TDocument : DocumentBase
         {
-            Document doc = this.documentDbFixture.Client.CreateDocumentAsync(collectionUri, document).Result;
+            Document doc = this.documentDbFixture.Client.CreateDocumentAsync(collectionUri, document, new RequestOptions { PartitionKey = new PartitionKey(document.PartitionKey) }).Result;
         }
 
         protected DocumentDbUserStore<DocumentDbIdentityUser> CreateUserStore()

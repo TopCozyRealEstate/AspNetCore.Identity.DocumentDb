@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace AspNetCore.Identity.DocumentDb.Tests.Builder
 {
@@ -41,6 +39,7 @@ namespace AspNetCore.Identity.DocumentDb.Tests.Builder
         public DocumentDbIdentityUserBuilder WithId(string id = null)
         {
             identityUser.Id = id ?? Guid.NewGuid().ToString().ToUpper();
+            identityUser.PartitionKey = identityUser.Id;
             return this;
         }
 
@@ -93,6 +92,7 @@ namespace AspNetCore.Identity.DocumentDb.Tests.Builder
                     Name = newRoleName,
                     NormalizedName = normalizer.Normalize(newRoleName)
                 };
+                role.PartitionKey = role.Id;
             }
             else
             {
@@ -130,6 +130,11 @@ namespace AspNetCore.Identity.DocumentDb.Tests.Builder
         {
             this.identityUser.AccessFailedCount = count;
             return this;
+        }
+
+        public DocumentDbIdentityUser Build()
+        {
+            return this.identityUser;
         }
     }
 }

@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Azure.Documents.Client;
+using AspNetCore.Identity.DocumentDb.Tools;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Azure.Documents;
-using Newtonsoft.Json;
-using AspNetCore.Identity.DocumentDb.Tools;
+using Microsoft.Azure.Documents.Client;
 
 namespace AspNetCore.Identity.DocumentDb.Tests.Fixtures
 {
@@ -17,6 +13,8 @@ namespace AspNetCore.Identity.DocumentDb.Tests.Fixtures
         public string Database { get; } = "AspNetCore.Identity.DocumentDb.Tests";
         public string UserStoreDocumentCollection { get; private set; } = "AspNetCore.Identity";
         public string RoleStoreDocumentCollection { get; private set; } = "AspNetCore.Identity";
+        public string UserStorePartitionKeyPath { get; private set; } = "/partitionKey";
+        public string RoleStorePartitionKeyPath { get; private set; } = "/partitionKey";
         public Uri DatabaseLink { get; private set; }
         public Uri UserStoreCollectionLink { get; private set; }
         public Uri RoleStoreCollectionLink { get; private set; }
@@ -43,15 +41,17 @@ namespace AspNetCore.Identity.DocumentDb.Tests.Fixtures
 
             Database db = this.Client.CreateDatabaseAsync(new Database() { Id = this.Database }).Result;
 
-            DocumentCollection userCollection = this.Client.CreateDocumentCollectionAsync(
-                DatabaseLink,
-                new DocumentCollection() { Id = this.UserStoreDocumentCollection }).Result;
+            DocumentCollection userCollection = new DocumentCollection() { Id = this.UserStoreDocumentCollection };
+            userCollection.PartitionKey.Paths.Add(this.UserStorePartitionKeyPath);
+
+            userCollection = this.Client.CreateDocumentCollectionAsync(DatabaseLink, userCollection).Result;
 
             if (this.UserStoreDocumentCollection != this.RoleStoreDocumentCollection)
             {
-                DocumentCollection roleCollection = this.Client.CreateDocumentCollectionAsync(
-                    DatabaseLink,
-                    new DocumentCollection() { Id = this.RoleStoreDocumentCollection }).Result;
+                DocumentCollection roleCollection = new DocumentCollection() { Id = this.RoleStoreDocumentCollection };
+                roleCollection.PartitionKey.Paths.Add(this.RoleStorePartitionKeyPath);
+
+                roleCollection = this.Client.CreateDocumentCollectionAsync(DatabaseLink, roleCollection).Result;
             }
         }
 

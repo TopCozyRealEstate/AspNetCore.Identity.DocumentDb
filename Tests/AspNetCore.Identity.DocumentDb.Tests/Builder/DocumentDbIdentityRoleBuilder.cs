@@ -1,9 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace AspNetCore.Identity.DocumentDb.Tests.Builder
 {
@@ -37,6 +33,7 @@ namespace AspNetCore.Identity.DocumentDb.Tests.Builder
         public DocumentDbIdentityRoleBuilder WithId(string id = null)
         {
             identityRole.Id = id ?? Guid.NewGuid().ToString().ToUpper();
+            identityRole.PartitionKey = identityRole.Id;
             return this;
         }
 
@@ -66,6 +63,11 @@ namespace AspNetCore.Identity.DocumentDb.Tests.Builder
             identityRole.Claims.Add(claim);
 
             return this;
+        }
+
+        public DocumentDbIdentityRole Build()
+        {
+            return this.identityRole;
         }
     }
 }

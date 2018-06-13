@@ -85,8 +85,18 @@ namespace AspNetCore.Identity.DocumentDb.Stores
             {
                 user.Id = Guid.NewGuid().ToString();
             }
+            if (user.PartitionKey == null)
+            {
+                user.PartitionKey = user.Id;
+            }
 
-            ResourceResponse<Document> result = await documentClient.CreateDocumentAsync(collectionUri, user);
+            ResourceResponse<Document> result = await documentClient.CreateDocumentAsync(
+                collectionUri,
+                user,
+                new RequestOptions
+                {
+                    PartitionKey = new PartitionKey(user.PartitionKey)
+                });
 
             return result.StatusCode == HttpStatusCode.Created
                 ? IdentityResult.Success
@@ -105,7 +115,12 @@ namespace AspNetCore.Identity.DocumentDb.Stores
 
             try
             {
-                await documentClient.DeleteDocumentAsync(GenerateDocumentUri(user.Id));
+                await documentClient.DeleteDocumentAsync(
+                    GenerateDocumentUri(user.Id),
+                    new RequestOptions
+                    {
+                        PartitionKey = new PartitionKey(user.Id)
+                    });
             }
             catch (DocumentClientException dce)
             {
@@ -130,7 +145,12 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(userId));
             }
 
-            TUser foundUser = await documentClient.ReadDocumentAsync<TUser>(GenerateDocumentUri(userId));
+            TUser foundUser = await documentClient.ReadDocumentAsync<TUser>(
+                GenerateDocumentUri(userId),
+                new RequestOptions
+                {
+                    PartitionKey = new PartitionKey(userId)
+                });
 
             return foundUser;
         }
@@ -244,7 +264,13 @@ namespace AspNetCore.Identity.DocumentDb.Stores
 
             try
             {
-                await documentClient.ReplaceDocumentAsync(GenerateDocumentUri(user.Id), document: user);
+                await documentClient.ReplaceDocumentAsync(
+                    GenerateDocumentUri(user.Id),
+                    user,
+                    new RequestOptions
+                    {
+                        PartitionKey = new PartitionKey(user.Id)
+                    });
             }
             catch (DocumentClientException dce)
             {

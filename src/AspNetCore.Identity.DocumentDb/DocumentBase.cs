@@ -1,8 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AspNetCore.Identity.DocumentDb
 {
@@ -16,5 +12,8 @@ namespace AspNetCore.Identity.DocumentDb
                 return this.GetType().Name;
             }
         }
+
+        [JsonProperty(PropertyName = "partitionKey")]
+        public object PartitionKey { get; set; }
     }
 }

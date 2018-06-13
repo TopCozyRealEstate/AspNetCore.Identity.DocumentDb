@@ -1,13 +1,13 @@
-﻿using AspNetCore.Identity.DocumentDb.Stores;
-using AspNetCore.Identity.DocumentDb.Tests.Builder;
-using AspNetCore.Identity.DocumentDb.Tests.Fixtures;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Azure.Documents.Client;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using AspNetCore.Identity.DocumentDb.Stores;
+using AspNetCore.Identity.DocumentDb.Tests.Builder;
+using AspNetCore.Identity.DocumentDb.Tests.Fixtures;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Azure.Documents.Client;
 using Xunit;
 
 namespace AspNetCore.Identity.DocumentDb.Tests
@@ -15,7 +15,7 @@ namespace AspNetCore.Identity.DocumentDb.Tests
     [Collection("DocumentDbCollection")]
     public class UserStoreTests : StoreTestsBase
     {
-        public UserStoreTests(DocumentDbFixture documentDbFixture) 
+        public UserStoreTests(DocumentDbFixture documentDbFixture)
             : base(documentDbFixture)
         {
             this.collectionUri = UriFactory.CreateDocumentCollectionUri(this.documentDbFixture.Database, this.documentDbFixture.UserStoreDocumentCollection);
@@ -46,14 +46,14 @@ namespace AspNetCore.Identity.DocumentDb.Tests
 
             CreateDocument(firstAdmin);
             CreateDocument(secondAdmin);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().AddClaim().AddClaim());
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().AddClaim().AddClaim().AddClaim());
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().AddClaim().AddClaim());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddClaim().AddClaim().Build());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddClaim().AddClaim().AddClaim().Build());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddClaim().AddClaim().Build());
             CreateDocument(thirdAdmin);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().AddClaim().AddClaim().AddClaim().AddClaim());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddClaim().AddClaim().AddClaim().AddClaim().Build());
 
             IList<DocumentDbIdentityUser> adminUsers = await store.GetUsersForClaimAsync(new Claim(ClaimTypes.Role, adminRoleValue), CancellationToken.None);
-            
+
             Assert.Collection(
                 adminUsers,
                 u => u.Id.Equals(firstAdmin.Id),
@@ -68,9 +68,9 @@ namespace AspNetCore.Identity.DocumentDb.Tests
             DocumentDbIdentityUser<DocumentDbIdentityRole> targetUser = DocumentDbIdentityUserBuilder.Create().WithId().WithUserLoginInfo(amount: 3);
             UserLoginInfo targetLogin = targetUser.Logins[1];
 
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithUserLoginInfo(amount: 2));
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithUserLoginInfo(amount: 2).Build());
             CreateDocument(targetUser);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithUserLoginInfo(amount: 2));
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithUserLoginInfo(amount: 2).Build());
 
             DocumentDbIdentityUser<DocumentDbIdentityRole> foundUser = await store.FindByLoginAsync(targetLogin.LoginProvider, targetLogin.ProviderKey, CancellationToken.None);
 
@@ -80,7 +80,7 @@ namespace AspNetCore.Identity.DocumentDb.Tests
         [Fact]
         public async Task ShouldReturnAllUsersWithAdminRole()
         {
-            DocumentDbIdentityRole adminRole = DocumentDbIdentityRoleBuilder.Create().WithNormalizedRoleName();
+            DocumentDbIdentityRole adminRole = DocumentDbIdentityRoleBuilder.Create().WithId().WithNormalizedRoleName();
 
             DocumentDbUserStore<DocumentDbIdentityUser> store = CreateUserStore();
 
@@ -90,11 +90,11 @@ namespace AspNetCore.Identity.DocumentDb.Tests
 
             CreateDocument(firstAdmin);
             CreateDocument(secondAdmin);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().AddRole().AddRole());
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().AddRole().AddRole().AddRole());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddRole().AddRole().Build());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddRole().AddRole().AddRole().Build());
             CreateDocument(thirdAdmin);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create());
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().AddRole());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().Build());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddRole().Build());
 
             IList<DocumentDbIdentityUser> adminUsers = await store.GetUsersInRoleAsync(adminRole.NormalizedName, CancellationToken.None);
 
@@ -108,12 +108,12 @@ namespace AspNetCore.Identity.DocumentDb.Tests
         [Fact]
         public async Task ShouldReturnNoUsersWithAdminRoleWhenPassingNotNormalizedRoleNameToGetUsersInRole()
         {
-            DocumentDbIdentityRole adminRole = DocumentDbIdentityRoleBuilder.Create().WithNormalizedRoleName();
+            DocumentDbIdentityRole adminRole = DocumentDbIdentityRoleBuilder.Create().WithId().WithNormalizedRoleName();
             DocumentDbUserStore<DocumentDbIdentityUser> store = CreateUserStore();
             DocumentDbIdentityUser<DocumentDbIdentityRole> firstAdmin = DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedUserName().AddRole(adminRole).AddRole();
 
             CreateDocument(firstAdmin);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().AddRole().AddRole());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddRole().AddRole().Build());
 
             IList<DocumentDbIdentityUser> adminUsers = await store.GetUsersInRoleAsync(adminRole.Name, CancellationToken.None);
 
@@ -126,10 +126,10 @@ namespace AspNetCore.Identity.DocumentDb.Tests
             DocumentDbUserStore<DocumentDbIdentityUser> store = CreateUserStore();
             DocumentDbIdentityUser<DocumentDbIdentityRole> targetUser = DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedEmail();
 
-            CreateDocument(DocumentDbIdentityUserBuilder.Create());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().Build());
             CreateDocument(targetUser);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create());
-            CreateDocument(DocumentDbIdentityUserBuilder.Create());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().Build());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().Build());
 
             DocumentDbIdentityUser<DocumentDbIdentityRole> foundUser = await store.FindByEmailAsync(targetUser.NormalizedEmail, CancellationToken.None);
 
@@ -168,7 +168,7 @@ namespace AspNetCore.Identity.DocumentDb.Tests
         {
             DocumentDbUserStore<DocumentDbIdentityUser> userStore = CreateUserStore();
             DocumentDbRoleStore<DocumentDbIdentityRole> roleStore = CreateRoleStore();
-            DocumentDbIdentityUser targetUser = DocumentDbIdentityUserBuilder.Create();
+            DocumentDbIdentityUser targetUser = DocumentDbIdentityUserBuilder.Create().WithId();
             DocumentDbIdentityRole targetRole = DocumentDbIdentityRoleBuilder.Create("RoleName").WithId().WithNormalizedRoleName();
 
             // Create sample data role
@@ -185,12 +185,12 @@ namespace AspNetCore.Identity.DocumentDb.Tests
         {
             DocumentDbUserStore<DocumentDbIdentityUser> userStore = CreateUserStore();
             DocumentDbRoleStore<DocumentDbIdentityRole> roleStore = CreateRoleStore();
-            DocumentDbIdentityUser targetUser = DocumentDbIdentityUserBuilder.Create();
+            DocumentDbIdentityUser targetUser = DocumentDbIdentityUserBuilder.Create().WithId();
             DocumentDbIdentityRole someNotTargetedRole = DocumentDbIdentityRoleBuilder.Create().WithId().WithNormalizedRoleName();
 
             // Create a role so there is a differently named role in the store
             await roleStore.CreateAsync(someNotTargetedRole, CancellationToken.None);
-            
+
             // Add the user to a role name different than the role created before, expecting an exception
             await Assert.ThrowsAsync<ArgumentException>(async () => await userStore.AddToRoleAsync(targetUser, "NotExistantRole", CancellationToken.None));
         }
@@ -200,7 +200,7 @@ namespace AspNetCore.Identity.DocumentDb.Tests
         {
             DocumentDbUserStore<DocumentDbIdentityUser> userStore = CreateUserStore();
             DocumentDbRoleStore<DocumentDbIdentityRole> roleStore = CreateRoleStore();
-            DocumentDbIdentityUser targetUser = DocumentDbIdentityUserBuilder.Create();
+            DocumentDbIdentityUser targetUser = DocumentDbIdentityUserBuilder.Create().WithId();
             DocumentDbIdentityRole targetRole = DocumentDbIdentityRoleBuilder.Create().WithId().WithNormalizedRoleName();
 
             // Create sample data role
@@ -238,8 +238,8 @@ namespace AspNetCore.Identity.DocumentDb.Tests
             await userStore.RemoveFromRoleAsync(targetUser, secondRole.Name, CancellationToken.None);
 
             // Assert both roles are still here, as lookup without normalized name should have failed
-            Assert.Collection(targetUser.Roles, 
-                r => r.NormalizedName.Equals(firstRole.NormalizedName), 
+            Assert.Collection(targetUser.Roles,
+                r => r.NormalizedName.Equals(firstRole.NormalizedName),
                 r => r.NormalizedName.Equals(secondRole.NormalizedName));
         }
 
@@ -285,10 +285,10 @@ namespace AspNetCore.Identity.DocumentDb.Tests
             DocumentDbUserStore<DocumentDbIdentityUser> userStore = CreateUserStore();
             DocumentDbIdentityUser targetUser = DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedUserName();
 
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedUserName());
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedUserName());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedUserName().Build());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedUserName().Build());
             CreateDocument(targetUser);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedUserName());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedUserName().Build());
 
             DocumentDbIdentityUser<DocumentDbIdentityRole> foundUser = await userStore.FindByNameAsync(targetUser.NormalizedUserName, CancellationToken.None);
 
@@ -301,10 +301,10 @@ namespace AspNetCore.Identity.DocumentDb.Tests
             DocumentDbUserStore<DocumentDbIdentityUser> userStore = CreateUserStore();
             DocumentDbIdentityUser<DocumentDbIdentityRole> targetUser = DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedEmail();
 
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedEmail());
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedEmail());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedEmail().Build());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedEmail().Build());
             CreateDocument(targetUser);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedEmail());
+            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().WithNormalizedEmail().Build());
 
             DocumentDbIdentityUser<DocumentDbIdentityRole> foundUser = await userStore.FindByEmailAsync(targetUser.NormalizedEmail, CancellationToken.None);
 

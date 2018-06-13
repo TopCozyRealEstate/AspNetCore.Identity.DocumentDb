@@ -101,8 +101,13 @@ namespace AspNetCore.Identity.DocumentDb.Stores
             {
                 role.Id = Guid.NewGuid().ToString();
             }
+            if (role.PartitionKey == null)
+            {
+                role.PartitionKey = role.Id;
+            }
 
-            ResourceResponse<Document> result = await documentClient.CreateDocumentAsync(collectionUri, role);
+            ResourceResponse<Document> result =
+                await documentClient.CreateDocumentAsync(collectionUri, role, new RequestOptions { PartitionKey = new PartitionKey(role.PartitionKey) });
 
             return result.StatusCode == HttpStatusCode.Created
                 ? IdentityResult.Success
@@ -121,7 +126,8 @@ namespace AspNetCore.Identity.DocumentDb.Stores
 
             try
             {
-                ResourceResponse<Document> result = await documentClient.ReplaceDocumentAsync(GenerateDocumentUri(role.Id), document: role);
+                ResourceResponse<Document> result =
+                    await documentClient.ReplaceDocumentAsync(GenerateDocumentUri(role.Id), role, new RequestOptions { PartitionKey = new PartitionKey(role.Id) });
             }
             catch (DocumentClientException dce)
             {
@@ -150,7 +156,8 @@ namespace AspNetCore.Identity.DocumentDb.Stores
 
             try
             {
-                result = await documentClient.DeleteDocumentAsync(GenerateDocumentUri(role.Id));
+                result =
+                    await documentClient.DeleteDocumentAsync(GenerateDocumentUri(role.Id), new RequestOptions { PartitionKey = new PartitionKey(role.Id) });
             }
             catch (DocumentClientException dce)
             {
@@ -254,7 +261,8 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(roleId));
             }
 
-            TRole role = await documentClient.ReadDocumentAsync<TRole>(GenerateDocumentUri(roleId));
+            TRole role =
+                await documentClient.ReadDocumentAsync<TRole>(GenerateDocumentUri(roleId), new RequestOptions { PartitionKey = new PartitionKey(roleId) });
 
             return role;
         }

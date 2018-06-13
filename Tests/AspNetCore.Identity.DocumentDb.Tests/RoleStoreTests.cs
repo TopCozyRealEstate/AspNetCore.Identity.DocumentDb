@@ -1,17 +1,14 @@
-﻿using AspNetCore.Identity.DocumentDb.Stores;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
+using AspNetCore.Identity.DocumentDb.Stores;
 using AspNetCore.Identity.DocumentDb.Tests.Builder;
 using AspNetCore.Identity.DocumentDb.Tests.Comparer;
 using AspNetCore.Identity.DocumentDb.Tests.Fixtures;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace AspNetCore.Identity.DocumentDb.Tests
@@ -68,10 +65,10 @@ namespace AspNetCore.Identity.DocumentDb.Tests
             DocumentDbIdentityRole targetRole = DocumentDbIdentityRoleBuilder.Create().WithId();
 
             // Create sample data in DB
-            CreateDocument(DocumentDbIdentityRoleBuilder.Create());
-            CreateDocument(DocumentDbIdentityRoleBuilder.Create());
+            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithId().Build());
+            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithId().Build());
             CreateDocument(targetRole);
-            CreateDocument(DocumentDbIdentityRoleBuilder.Create());
+            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithId().Build());
 
             DocumentDbIdentityRole queriedRole = await store.FindByIdAsync(targetRole.Id, CancellationToken.None);
 
@@ -85,10 +82,10 @@ namespace AspNetCore.Identity.DocumentDb.Tests
             DocumentDbIdentityRole targetRole = DocumentDbIdentityRoleBuilder.Create().WithId().WithNormalizedRoleName();
 
             // Create sample data in DB
-            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithNormalizedRoleName());
-            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithNormalizedRoleName());
+            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithId().WithNormalizedRoleName().Build());
+            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithId().WithNormalizedRoleName().Build());
             CreateDocument(targetRole);
-            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithNormalizedRoleName());
+            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithId().WithNormalizedRoleName().Build());
 
             DocumentDbIdentityRole queriedRole = await store.FindByNameAsync(targetRole.NormalizedName, CancellationToken.None);
 
@@ -102,10 +99,10 @@ namespace AspNetCore.Identity.DocumentDb.Tests
             DocumentDbIdentityRole targetRole = DocumentDbIdentityRoleBuilder.Create().WithId();
 
             // Create sample data in DB
-            CreateDocument(DocumentDbIdentityRoleBuilder.Create());
-            CreateDocument(DocumentDbIdentityRoleBuilder.Create());
+            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithId().Build());
+            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithId().Build());
             CreateDocument(targetRole);
-            CreateDocument(DocumentDbIdentityRoleBuilder.Create());
+            CreateDocument(DocumentDbIdentityRoleBuilder.Create().WithId().Build());
 
             IdentityResult result = await store.DeleteAsync(targetRole, CancellationToken.None);
 
@@ -136,7 +133,7 @@ namespace AspNetCore.Identity.DocumentDb.Tests
         {
             Claim newClaim = new Claim(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
 
-            DocumentDbRoleStore <DocumentDbIdentityRole> store = CreateRoleStore();
+            DocumentDbRoleStore<DocumentDbIdentityRole> store = CreateRoleStore();
             DocumentDbIdentityRole targetRole = DocumentDbIdentityRoleBuilder.Create().WithId();
 
             await store.AddClaimAsync(targetRole, newClaim);
