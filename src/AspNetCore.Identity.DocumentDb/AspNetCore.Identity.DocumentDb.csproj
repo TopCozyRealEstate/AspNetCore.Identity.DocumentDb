@@ -6,7 +6,7 @@
     <AssemblyTitle>CodeKoenig.AspNetCore.Identity.DocumentDb</AssemblyTitle>
     <VersionPrefix>2.0.0</VersionPrefix>
     <Authors>Bernhard Koenig</Authors>
-    <TargetFrameworks>netstandard2.0;netstandard1.6;net46</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssemblyName>CodeKoenig.AspNetCore.Identity.DocumentDb</AssemblyName>
     <PackageId>CodeKoenig.AspNetCore.Identity.DocumentDb</PackageId>
     <PackageTags>DocumentDB;Cosmos DB;CosmosDB;AspNetCore;AspNet;Membership;Identity;Core;AspNetCore.Identity.DocumentDb</PackageTags>
@@ -18,32 +18,13 @@
     <PackageIconUrl>https://github.com/codekoenig/AspNetCore.Identity.DocumentDb/raw/master/Assets/CoreDocDbIdentityIcon256.png</PackageIconUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/codekoenig/AspNetCore.Identity.DocumentDb</RepositoryUrl>
-    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.6' ">1.6.1</NetStandardImplicitPackageVersion>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.1.2" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="2.2.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="1.1.1" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.5.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.0.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.12.2" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <DefineConstants Condition="'$(TargetFramework)' == 'netstandard2.0'">$(DefineConstants);NETSTANDARD2</DefineConstants>
-  </PropertyGroup>
 </Project>

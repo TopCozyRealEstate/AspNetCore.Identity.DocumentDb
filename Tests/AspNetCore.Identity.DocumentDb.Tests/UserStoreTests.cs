@@ -34,34 +34,6 @@ namespace AspNetCore.Identity.DocumentDb.Tests
         }
 
         [Fact]
-        public async Task ShouldReturnAllUsersWithAdminRoleClaim()
-        {
-            DocumentDbUserStore<DocumentDbIdentityUser> store = CreateUserStore();
-
-            string adminRoleValue = Guid.NewGuid().ToString();
-
-            DocumentDbIdentityUser<DocumentDbIdentityRole> firstAdmin = DocumentDbIdentityUserBuilder.Create().WithId().AddClaim(ClaimTypes.Role, adminRoleValue).AddClaim();
-            DocumentDbIdentityUser<DocumentDbIdentityRole> secondAdmin = DocumentDbIdentityUserBuilder.Create().WithId().AddClaim(ClaimTypes.Role, adminRoleValue).AddClaim().AddClaim();
-            DocumentDbIdentityUser<DocumentDbIdentityRole> thirdAdmin = DocumentDbIdentityUserBuilder.Create().WithId().AddClaim(ClaimTypes.Role, adminRoleValue);
-
-            CreateDocument(firstAdmin);
-            CreateDocument(secondAdmin);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddClaim().AddClaim().Build());
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddClaim().AddClaim().AddClaim().Build());
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddClaim().AddClaim().Build());
-            CreateDocument(thirdAdmin);
-            CreateDocument(DocumentDbIdentityUserBuilder.Create().WithId().AddClaim().AddClaim().AddClaim().AddClaim().Build());
-
-            IList<DocumentDbIdentityUser> adminUsers = await store.GetUsersForClaimAsync(new Claim(ClaimTypes.Role, adminRoleValue), CancellationToken.None);
-
-            Assert.Collection(
-                adminUsers,
-                u => u.Id.Equals(firstAdmin.Id),
-                u => u.Id.Equals(secondAdmin.Id),
-                u => u.Id.Equals(thirdAdmin.Id));
-        }
-
-        [Fact]
         public async Task ShouldReturnUserByLoginProvider()
         {
             DocumentDbUserStore<DocumentDbIdentityUser> store = CreateUserStore();
